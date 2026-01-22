@@ -7,7 +7,7 @@ volumes:
 networks:
   n8n-network:
     driver: bridge
-  shark:
+  seventrees_network:
     external: true
 
 x-n8n: &service-n8n
@@ -18,7 +18,7 @@ x-n8n: &service-n8n
   restart: unless-stopped
   networks:
     - n8n-network
-    - shark
+    - seventrees_network
   environment:
     - N8N_DIAGNOSTICS_ENABLED=${N8N_DIAGNOSTICS_ENABLED}
     - N8N_USER_FOLDER=${N8N_USER_FOLDER}
@@ -61,7 +61,7 @@ x-task-runner: &service-task-runner
   restart: unless-stopped
   networks:
     - n8n-network
-    - shark
+    - seventrees_network
   environment:
     - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
     - N8N_RUNNERS_MAX_CONCURRENCY=${N8N_RUNNERS_MAX_CONCURRENCY}
@@ -73,15 +73,6 @@ x-task-runner: &service-task-runner
     - N8N_RUNNERS_INSECURE_MODE=true
 
 services:
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    restart: unless-stopped
-    networks:
-      - n8n-network
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
-    environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
-
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -100,7 +91,7 @@ services:
     image: pgvector/pgvector:pg17
     restart: unless-stopped
     ports:
-      - "${TAILSCALE_IP}:5432:5432" # Bind to Tailscale IP if set, otherwise all interfaces
+      - "5432:5432" # Bind to Tailscale IP if set, otherwise all interfaces
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -119,13 +110,13 @@ services:
       retries: 10
     networks:
       - n8n-network
-      - shark
+      - seventrees_network
 
   n8n:
     <<: *service-n8n
     ports:
-      - "${TAILSCALE_IP}:5678:5678"
-      - "${TAILSCALE_IP}:5679:5679"
+      - "5678:5678"
+      - "5679:5679"
     volumes:
       - n8n_main:/n8n
     depends_on:
@@ -135,7 +126,7 @@ services:
         condition: service_healthy
     networks:
       - n8n-network
-      - shark
+      - seventrees_network
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:5678/healthz || exit 1"]
       interval: 10s
@@ -202,7 +193,7 @@ services:
         condition: service_healthy
     networks:
       - n8n-network
-      - shark
+      - seventrees_network
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:5678/healthz || exit 1"]
       interval: 10s
