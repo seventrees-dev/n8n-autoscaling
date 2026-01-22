@@ -90,8 +90,8 @@ services:
   postgres:
     image: pgvector/pgvector:pg17
     restart: unless-stopped
-    ports:
-      - "5432:5432" # Bind to Tailscale IP if set, otherwise all interfaces
+    # ports:
+    #   - "5432:5432" # Bind to Tailscale IP if set, otherwise all interfaces
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
